@@ -8,14 +8,15 @@ FastAPI backend для генерации конспекта, ключевых �
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-Copy-Item .env.example .env
 ```
 
-Для запуска без API-ключа в `.env` установите `USE_MOCK=true`. Для реальной генерации укажите `OPENAI_API_KEY` и оставьте `USE_MOCK=false`.
+По умолчанию backend работает без API-ключа в mock-режиме. Для запуска просто выполните:
 
 ```powershell
 python -m uvicorn backend.main:app --reload --port 8000
 ```
+
+Для реальной генерации создайте `.env`, укажите `OPENAI_API_KEY` и установите `USE_MOCK=false`.
 
 После запуска:
 

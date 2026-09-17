@@ -1,7 +1,5 @@
 import os
 
-from openai import AsyncOpenAI
-
 from .schemas import Flashcard, LectureResponse, QuizQuestion
 
 SYSTEM_PROMPT = """Ты помощник по подготовке к учебе. Проанализируй текст лекции и верни:
@@ -42,12 +40,14 @@ def _mock_response(text: str) -> LectureResponse:
 
 
 async def process_lecture(text: str) -> LectureResponse:
-    if os.getenv("USE_MOCK", "false").lower() == "true":
+    if os.getenv("USE_MOCK", "true").lower() == "true":
         return _mock_response(text)
 
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY не задан. Для локального запуска включите USE_MOCK=true.")
+
+    from openai import AsyncOpenAI
 
     client = AsyncOpenAI(api_key=api_key)
     completion = await client.beta.chat.completions.parse(
