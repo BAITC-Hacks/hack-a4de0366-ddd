@@ -1,12 +1,13 @@
 import os
 
-from .schemas import Flashcard, LectureResponse, QuizQuestion
+from .schemas import Flashcard, KeyPoint, LectureResponse, QuizQuestion
 
 SYSTEM_PROMPT = """Ты помощник по подготовке к учебе. Проанализируй текст лекции и верни:
 - краткое, точное резюме;
-- ключевые пункты без повторов;
+- ключевые пункты без повторов, каждый с точной цитатой source_quote из лекции;
 - проверочный тест с одним правильным вариантом;
-- полезные карточки для повторения.
+- полезные карточки для повторения, каждая с точной цитатой source_quote;
+- оценку confidence_score от 0 до 100 и примерное время чтения/повторения.
 Не добавляй факты, которых нет в лекции. Пиши на языке исходного текста.
 """
 
@@ -16,10 +17,11 @@ def _mock_response(text: str) -> LectureResponse:
     summary = first_sentence or "Материал лекции подготовлен для повторения."
     return LectureResponse(
         summary=summary,
+        summary_source_quote=summary,
         key_points=[
-            "Основные понятия выделены из текста лекции.",
-            "Материал организован для быстрого повторения.",
-            "Проверьте понимание с помощью вопросов ниже.",
+            KeyPoint(text="Основные понятия выделены из текста лекции.", source_quote=summary),
+            KeyPoint(text="Материал организован для быстрого повторения.", source_quote=summary),
+            KeyPoint(text="Проверьте понимание с помощью вопросов ниже.", source_quote=summary),
         ],
         quiz=[
             QuizQuestion(
@@ -27,15 +29,21 @@ def _mock_response(text: str) -> LectureResponse:
                 options=[summary[:120], "Тема не связана с лекцией"],
                 correct_index=0,
                 explanation="Первый вариант отражает содержание исходного текста.",
+                source_quote=summary,
             )
         ],
         flashcards=[
-            Flashcard(front="Что нужно повторить?", back=summary),
+            Flashcard(front="Что нужно повторить?", back=summary, source_quote=summary),
             Flashcard(
                 front="Как проверить понимание?",
                 back="Ответьте на вопросы и объясните ключевые пункты своими словами.",
+                source_quote=summary,
             ),
         ],
+        confidence_score=92,
+        original_reading_minutes=max(1, round(len(text.split()) / 180)),
+        summary_reading_minutes=1,
+        flashcard_study_minutes=2,
     )
 
 

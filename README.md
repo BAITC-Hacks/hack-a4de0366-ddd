@@ -33,3 +33,5 @@ python -m uvicorn backend.main:app --reload --port 8000
 ```
 
 Контракт ответа находится в `backend/schemas.py`. Переменная `CORS_ORIGINS` принимает адреса frontend через запятую.
+
+План frontend-фич и точные TypeScript-типы находятся в `FRONTEND_FEATURES.txt`.

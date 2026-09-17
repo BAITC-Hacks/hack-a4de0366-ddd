@@ -1,0 +1,132 @@
+LectureAI Assistant - frontend task brief
+
+Цель
+====
+Превратить текущий прототип в учебный workspace в стиле Notion/Linear: слева ввод лекции, справа интерактивные результаты. Сохранить существующий React/Vite стек и подключение к POST /api/generate.
+
+1. Layout
+=========
+- Desktop: двухколоночный dashboard.
+- Левая колонка: фиксированный блок ввода, textarea, счетчик символов, кнопки "Вставить пример" и "Сгенерировать", краткая статистика.
+- Правая колонка: tabs "Конспект", "Квиз", "Карточки".
+- Mobile: колонки складываются вертикально; tabs остаются доступными горизонтальным scroll.
+- Добавить header: LectureAI Assistant, индикатор режима Mock/API, кнопка "Сбросить".
+- Не показывать все данные одним длинным списком.
+
+2. API types
+===========
+Обновить src/types.ts под backend response:
+
+export interface KeyPoint {
+  text: string;
+  source_quote: string;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+  source_quote: string;
+}
+
+export interface Flashcard {
+  front: string;
+  back: string;
+  source_quote: string;
+}
+
+export interface LectureData {
+  summary: string;
+  summary_source_quote: string;
+  key_points: KeyPoint[];
+  quiz: QuizQuestion[];
+  flashcards: Flashcard[];
+  confidence_score: number;
+  original_reading_minutes: number;
+  summary_reading_minutes: number;
+  flashcard_study_minutes: number;
+}
+
+3. Input and demo flow
+======================
+- Валидация: минимум 150 символов, показывать счетчик current/max.
+- Кнопка "Вставить пример лекции" заполняет textarea sampleLecture.
+- Во время генерации отключить кнопку и показать skeleton output.
+- Сменять статусы каждые 1.5-2 секунды:
+  "Считываем смыслы лекции..."
+  "Убираем воду и выделяем главное..."
+  "Составляем тестовые вопросы..."
+- После успешной генерации применить fade-in/slide-up к результату.
+- Ошибка API должна быть видимой и понятной; добавить кнопку повторной отправки.
+
+4. Tab: Конспект и тезисы
+=========================
+- Summary показать в callout с иконкой.
+- Рядом показать confidence_score: "Достоверность: X%".
+- Показать метрики: "Оригинал: X мин", "Конспект: Y мин", "Карточки: Z мин".
+- Тезисы рендерить из key_points[i].text.
+- У каждого тезиса кнопка "Показать источник".
+- По клику открыть source drawer/modal с исходным текстом и подсветкой key_points[i].source_quote через <mark>.
+- Для summary использовать summary_source_quote.
+- Добавить кнопки "Скопировать конспект" и "Скачать .md".
+- Markdown export должен включать summary, key points, quiz и flashcards.
+
+5. Tab: Квиз-тренажер
+=====================
+- Показывать один вопрос за раз.
+- Header: "Вопрос N из TOTAL" и progress bar.
+- До ответа варианты кликабельные, без подсказки правильного ответа.
+- После выбора:
+  - правильный вариант зеленый;
+  - неправильный красный;
+  - правильный вариант все равно подсвечивается зеленым;
+  - показать explanation;
+  - заблокировать повторный выбор.
+- Кнопка "Следующий вопрос".
+- В конце показать score: правильные / все.
+- Собирать wrongQuestionIndexes.
+- Для ошибок показать блок "Слабые места" и кнопку "Повторить карточки".
+- У каждого вопроса кнопка "Показать источник" с подсветкой quiz[i].source_quote.
+
+6. Tab: Флэш-карточки
+=====================
+- Сетка 3x2 на desktop, адаптивная сетка на mobile.
+- Клик по карточке запускает CSS 3D flip (perspective, backface-visibility, rotateY).
+- Front: вопрос, иконка лампы и номер карточки.
+- Back: ответ и source quote.
+- Кнопки "Знаю" и "Повторить" не должны закрывать flip click.
+- Трекер: "Изучено X из TOTAL" и progress bar.
+- "Знаю" помечает карточку изученной; "Повторить" возвращает ее в очередь слабых мест.
+- Кнопка "Показать источник" открывает подсвеченную цитату.
+- Экспорт "Anki .txt": каждая строка в формате front;back.
+
+7. Source grounding
+====================
+- Исходный текст хранить в состоянии inputText.
+- Цитату искать безопасно через indexOf, не вставлять HTML напрямую.
+- Для подсветки строить React-ноды до/после найденного диапазона; не использовать dangerouslySetInnerHTML.
+- Если цитата не найдена дословно, показать ее в отдельном блоке "Цитата источника" без подсветки.
+
+8. Visual direction
+====================
+- Dark workspace: #0F172A background, #1E293B panels.
+- Акценты: blue #3B82F6, green #22C55E, red #EF4444, amber #F59E0B.
+- Glass effect использовать умеренно: border, прозрачность и backdrop-filter только на крупных панелях.
+- Добавить visible focus states для keyboard navigation.
+- Карточки максимум 8px radius; не вкладывать карточки в карточки.
+- Использовать lucide-react icons, если библиотека уже подключена.
+- Добавить prefers-reduced-motion для отключения flip и reveal animation.
+
+9. Acceptance checklist
+========================
+[ ] npm run build проходит.
+[ ] Mock data расширен всеми новыми полями.
+[ ] POST /api/generate успешно отображает ответ без API ключа.
+[ ] Tabs работают с клавиатуры и на mobile.
+[ ] Quiz показывает один вопрос и сохраняет ошибки.
+[ ] Flashcards переворачиваются и считают изученные.
+[ ] Source quote открывается для summary, тезиса, quiz и flashcard.
+[ ] Markdown и Anki export скачиваются.
+[ ] Loading, empty, error и success states реализованы.
+[ ] В frontend нет API ключей.
