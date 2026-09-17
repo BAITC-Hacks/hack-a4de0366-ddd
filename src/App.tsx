@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { generateMaterials } from './services/api';
-import { LectureData } from './types';
+import type { LectureData } from './types';
 
-const sampleLecture = `В современном мире информация быстро меняется, поэтому человеку важно уметь извлекать главное из больших текстов. Структурирование знаний помогает не просто запоминать факты, но и понимать, как они связаны между собой. В лекции рассматриваются методы анализа текста, выделения ключевых идей и создания понятной схемы для дальнейшего обучения. Основной акцент делается на практической пользе таких инструментов при подготовке к экзаменам, работе с материалами и формировании устойчивых навыков мышления. При правильном подходе структурированные заметки позволяют лучше удерживать информацию, быстрее возвращаться к важным моментам и глубже понимать сложные темы.`;
+const sampleLecture = `В современном мире информация постоянно меняется, поэтому человеку важно уметь быстро выделять главное из длинных текстов. Структурирование знаний помогает не просто запоминать факты, но и понимать связи между идеями, событиями и понятиями. В лекции рассматриваются практические способы анализа текста, выделения ключевых мыслей и создания понятного конспекта для дальнейшего повторения. Такой подход особенно полезен в обучении, когда нужно быстро восстанавливать основные тезисы, проверять понимание и закреплять материал с помощью вопросов и карточек.`;
 
 function App() {
   const [text, setText] = useState(sampleLecture);
@@ -10,7 +10,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isValidText = useMemo(() => text.trim().length >= 150, [text]);
+  const charsCount = useMemo(() => text.trim().length, [text]);
+  const isValidText = charsCount >= 150;
 
   const handleGenerate = async () => {
     if (!isValidText) {
@@ -32,44 +33,42 @@ function App() {
   };
 
   return (
-    <div className="page-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Hackathon prototype</p>
-          <h1>Lecture AI Assistant</h1>
-        </div>
-      </header>
+    <main className="app-shell">
+      <section className="hero-panel">
+        <p className="eyebrow">First stage</p>
+        <h1>Hello World</h1>
+        <p className="subtitle">Lecture AI Assistant</p>
+      </section>
 
-      <main className="content-grid">
-        <section className="panel input-panel">
+      <section className="content-grid">
+        <div className="panel input-panel">
           <label htmlFor="lecture-input" className="panel-title">
             Вставьте лекцию
           </label>
+
           <textarea
             id="lecture-input"
             value={text}
             onChange={(event) => setText(event.target.value)}
+            rows={12}
             placeholder="Введите текст лекции..."
-            rows={14}
           />
 
           <div className="meta-row">
-            <span className={isValidText ? 'meta ok' : 'meta'}>
-              {text.trim().length} символов
-            </span>
+            <span className={isValidText ? 'meta ok' : 'meta'}>{charsCount} символов</span>
             <button onClick={handleGenerate} disabled={loading || !isValidText}>
-              {loading ? 'Генерация...' : 'Сгенерировать материалы'}
+              {loading ? 'Генерация...' : 'Сгенерировать'}
             </button>
           </div>
 
           {error && <div className="error-box">{error}</div>}
-        </section>
+        </div>
 
-        <section className="panel output-panel">
+        <div className="panel output-panel">
           {!result && !loading && (
             <div className="empty-state">
               <h2>Материалы появятся здесь</h2>
-              <p>Загрузите текст и получите краткое резюме, список ключевых пунктов, квиз и карточки.</p>
+              <p>Сгенерируем резюме, ключевые пункты, квиз и карточки.</p>
             </div>
           )}
 
@@ -98,10 +97,10 @@ function App() {
 
               <div className="section-block">
                 <h2>Квиз</h2>
-                <div className="quiz-list">
+                <div className="stack-list">
                   {result.quiz.map((item, index) => (
-                    <div key={`${item.question}-${index}`} className="quiz-card">
-                      <p className="question-number">Вопрос {index + 1}</p>
+                    <div key={`${item.question}-${index}`} className="question-card">
+                      <p className="small-label">Вопрос {index + 1}</p>
                       <h3>{item.question}</h3>
                       <ol>
                         {item.options.map((option, optionIndex) => (
@@ -134,9 +133,9 @@ function App() {
               </div>
             </>
           )}
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }
 
